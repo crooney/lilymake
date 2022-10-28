@@ -1,0 +1,5 @@
+generated/
+out/
+*.zip
+.DS_Store
+
