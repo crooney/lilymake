@@ -7,6 +7,7 @@ LILYVER := $(shell $(LILYCMD) --version | grep -E -o "[0-9.]+" | head -1)
 FORMAT      ?= pdf
 GENDIR      ?= generated
 OUTDIR      ?= out
+ZIPDIR      ?= zip
 GLOBDIR     ?= globals
 SRCDIR      ?= src
 NOTEDIR     ?= notes
@@ -35,11 +36,11 @@ release: clean all zip
 
 .PHONY: clean
 clean:
-	rm -fr $(GENDIR) $(OUTDIR)
+	rm -fr $(GENDIR) $(OUTDIR) $(ZIPDIR)
 	
 .PHONY: dirs
 dirs:
-	mkdir -p $(GENDIR) $(OUTDIR)
+	mkdir -p $(GENDIR) $(OUTDIR) $(ZIPDIR)
 
 .INTERMEDIATE: $(GENDIR)/part-template.ly
 $(GENDIR)/part-template.ly:
@@ -61,33 +62,23 @@ generated: dirs $(GENDIR)/part-template.ly $(GENPARTS)
 
 %.$(FORMAT): %.ly
 	$(LILYCMD) $(FLAGS) $<
-	
-zip: all $(OUTDIR)/$(PIECE).zip
-$(OUTDIR)/$(PIECE).zip:
-	zip -q -r $@ $(OUTDIR)/*.$(FORMAT) $(OUTDIR)/*.mid
 
+.PHONY: zip
+zip: ZFLAGS ?= -q -j
+zip: all  
+	zip $(ZFLAGS) -r $(ZIPDIR)/$(PIECE)-src.zip **/*ly
+	zip $(ZFLAGS) -r $(ZIPDIR)/$(PIECE)-score.zip $(OUTDIR)/*
+	
 .PHONY: pdf
 pdf:
 	FORMAT=pdf make
-
-
 .PHONY: ps
 ps:
 	FORMAT=ps make
-
-
 .PHONY: svg
 svg:
 	FORMAT=svg make
-
-
 .PHONY: png
 png:
 	FORMAT=png make
-
-
-.PHONY: pdf
-pdf:
-	FORMAT=pdf make
-
 
