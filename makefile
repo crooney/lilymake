@@ -37,6 +37,9 @@ OUTS     := $(patsubst %.ly,%.$(FORMAT), $(notdir $(SRCS)))        # output file
 # Flags for every invocation of lilypond. Override by, e.g., "FLAGS='-s' make"
 FLAGS    ?= -dno-point-and-click -ddelete-intermediate-files
 FLAGS    += -I $(CURDIR)/$(GENDIR) -I $(CURDIR)/$(NOTEDIR) -I $(CURDIR)/$(GLOBDIR) -f $(FORMAT)
+ifndef DEBUG
+FLAGS    += -s
+endif
 
 # Default target. Prints variable values, generates intermediate files and builds output
 all: vars generated $(OUTPARTS) $(OUTS)
@@ -46,7 +49,9 @@ all: vars generated $(OUTPARTS) $(OUTS)
 # Prints vars to screen before building
 .PHONY: vars
 vars:
+ifdef DEBUG
 	@echo  "piece:$(PIECE) version:$(PROJVER) lilycmd:$(LILYCMD) lilyver:$(LILYVER) parts:$(PARTS) genparts:$(GENPARTS) outparts:$(OUTPARTS) globals:$(GLOBALS) flags:$(FLAGS) srcs:$(SRCS) outs:$(OUTS)"
+endif
 
 # Builds everything from scratch
 .PHONY: release
@@ -78,6 +83,10 @@ $(GENDIR)/part-template.ly:
 %.ly: P += $(shell basename $@ .ly | sed "s/$(PIECE)-//")
 %.ly: | $(GENDIR)/part-template.ly
 	sed "s/_PART_/$P/g" $(GENDIR)/part-template.ly >$@
+ifdef DEBUG
+	@echo; echo; echo $@; echo "========================="
+	cat $@
+endif
 
 # Generate all prerequisites to building.
 .PHONY: generated
@@ -107,3 +116,5 @@ svg:
 png:
 	FORMAT=png make
 
+debug:
+	DEBUG=true make
